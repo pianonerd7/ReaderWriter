@@ -8,18 +8,28 @@
 #define NUM_THREADS 200
 #endif
 
+typedef struct _thread_data_t {
+	int tid;//thread id
+	int amount;//amount to deposit or withdraw
+} thread_data_t;
+
+const unsigned int RAND_RANGE = RAND_MAX>>10;
+
 sem_t wrt, mutex;
 readcount = 0;
+time_t t;
 
+int getRand();
 void *reader();
 void *writer();
 void semwait(semg_t *sem);
 void semsignal(sem_t *sem);
 
-int main() {
+int main(int argc, char const *argv[]) {
 	pthread_t threads[NUM_THREADS];
 	thread_data_t thread_data[NUM_THREADS];
 
+	srand((unsigned int) time(&t));
 
 	//initialize semaphores
 	if (sem_init(&mutex, 0, (unsigned int)1) < 0
@@ -27,6 +37,10 @@ int main() {
 		perror("sem_init");
 		exit(EXIT_FAILURE);
 	}
+}
+
+int getRand() {
+	return ((rand()% RAND_RANGE) - RAND_RANGE/2);
 }
 
 void reader(void *arg) {
