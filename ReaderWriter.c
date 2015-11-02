@@ -20,6 +20,13 @@ int main() {
 	pthread_t threads[NUM_THREADS];
 	thread_data_t thread_data[NUM_THREADS];
 
+
+	//initialize semaphores
+	if (sem_init(&mutex, 0, (unsigned int)1) < 0
+		|| sem_init(&wrt, 0, (unsigned int)1) < 0) {
+		perror("sem_init");
+		exit(EXIT_FAILURE);
+	}
 }
 
 void reader(void *arg) {
