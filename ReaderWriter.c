@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define NUM_THREADS 200
+#define NUM_THREADS 100
 
 
 typedef struct _thread_data_t {
@@ -24,7 +24,7 @@ void *writer();
 void semwait(sem_t *sem);
 void semsignal(sem_t *sem);
 
-void main() {
+int main() {
 	pthread_t threads[NUM_THREADS];
 	thread_data_t thread_data[NUM_THREADS];
 	int errorCheck;
@@ -48,13 +48,13 @@ void main() {
 			thread_func = writer;
 			waitingWriter++;
 			fflush(stdout);
-			printf("***Thread %d is a writer and there are %d other writers \n", i, waitingWriter);
+			printf("***Thread %d is a writer and there are %d writers \n", i, waitingWriter);
 		}
 		else { //getRand() > 0
 			thread_func = reader;
 			readcount++;
 			fflush(stdout);
-			printf("***Thread %d is a reader and there are %d other readers \n", i, readcount);
+			printf("***Thread %d is a reader and there are %d readers \n", i, readcount);
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
@@ -62,6 +62,7 @@ void main() {
 			return EXIT_FAILURE;
 		}
 	}
+	return 0;
 }
 
 int getRand() {
@@ -107,8 +108,9 @@ void *reader(void *arg) {
 	}
 
 	fflush(stdout);
-	printf("***Thread %d is done reading and will now exit. There are %d other readers \n", data->tid, readcount);
+	printf("***Thread %d is done reading and will now exit. There are %d readers \n", data->tid, readcount);
 	semsignal(&mutex);
+	return 0;
 }
 
 void *writer(void *arg) {
@@ -123,7 +125,8 @@ void *writer(void *arg) {
 
 	fflush(stdout);
 	printf("***Thread %d is releasing wrt \n", data->tid);
-	signal(&wrt);
+	semsignal(&wrt);
+	return 0;
 }
 
 /*
