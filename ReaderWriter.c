@@ -48,13 +48,13 @@ void main() {
 			thread_func = writer;
 			waitingWriter++;
 			fflush(stdout);
-			printf("***Thread %d is a writer and there are %d other writers", i, waitingWriter);
+			printf("***Thread %d is a writer and there are %d other writers \n", i, waitingWriter);
 		}
 		else { //getRand() > 0
 			thread_func = reader;
 			readcount++;
 			fflush(stdout);
-			printf("***Thread %d is a reader and there are %d other readers", i, readcount);
+			printf("***Thread %d is a reader and there are %d other readers \n", i, readcount);
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
@@ -72,57 +72,57 @@ void *reader(void *arg) {
 	thread_data_t *data = (thread_data_t *)arg;
 
 	fflush(stdout);
-	printf("***Thread %d is waiting on the mutex", data->tid);
+	printf("***Thread %d is waiting on the mutex \n", data->tid);
 
 	semwait(&mutex);
 	readcount++;
 
 	fflush(stdout);
-	printf("***Thread %d is about to read. readcount is %d", data->tid, readcount);
+	printf("***Thread %d is about to read. readcount is %d \n", data->tid, readcount);
 
 	if (readcount == 1) {
-		printf("***Thread %d wants to read. Waits for the wrt semaphore", data->tid);
+		printf("***Thread %d wants to read. Waits for the wrt semaphore \n", data->tid);
 		fflush(stdout);
 		semwait(&wrt);
 	}
 	
 	fflush(stdout);
-	printf("***Thread %d release the mutex", data->tid);
+	printf("***Thread %d release the mutex \n", data->tid);
 	semsignal(&mutex);
 
-	printf("***Thread %d IS READING!!!", data->tid);
+	printf("***Thread %d IS READING!!! \n", data->tid);
 
 	fflush(stdout);
-	printf("***Thread %d is waiting on the mutex", data->tid);
+	printf("***Thread %d is waiting on the mutex \n", data->tid);
 	semwait(&mutex);
 
 	readcount--;
 	fflush(stdout);
-	printf("***Thread %d is done reading. readcount is %d", data->tid, readcount);
+	printf("***Thread %d is done reading. readcount is %d \n", data->tid, readcount);
 
 	if (readcount == 0) {
 		fflush(stdout);
-		printf("***Thread %d is done reading. Signals wrt", data->tid);
+		printf("***Thread %d is done reading. Signals wrt \n", data->tid);
 		semsignal(&wrt);
 	}
 
 	fflush(stdout);
-	printf("***Thread %d is done reading and will now exit. There are %d other readers", data->tid, readcount);
-	signal(&mutex);
+	printf("***Thread %d is done reading and will now exit. There are %d other readers \n", data->tid, readcount);
+	semsignal(&mutex);
 }
 
 void *writer(void *arg) {
 	thread_data_t *data = (thread_data_t *)arg;
 
 	fflush(stdout);
-	printf("***Thread %d is waiting on wrt", data->tid);
+	printf("***Thread %d is waiting on wrt \n", data->tid);
 	semwait(&wrt);
 
 	fflush(stdout);
-	printf("***Thread %d IS WRITING!!!", data->tid);
+	printf("***Thread %d IS WRITING!!! \n", data->tid);
 
 	fflush(stdout);
-	printf("***Thread %d is releasing wrt", data->tid);
+	printf("***Thread %d is releasing wrt \n", data->tid);
 	signal(&wrt);
 }
 
