@@ -15,6 +15,7 @@ const unsigned int RAND_RANGE = RAND_MAX>>10;
 
 sem_t wrt, mutex;
 int readcount = 0;
+int waitingWriter = 0;
 time_t t;
 
 int getRand();
@@ -23,7 +24,7 @@ void *writer();
 void semwait(semg_t *sem);
 void semsignal(sem_t *sem);
 
-int main(int argc, char const *argv[]) {
+void main() {
 	pthread_t threads[NUM_THREADS];
 	thread_data_t thread_data[NUM_THREADS];
 	int errorCheck;
@@ -43,10 +44,12 @@ int main(int argc, char const *argv[]) {
 		thread_data[i].tid = i;
 
 		if (getRand() < 0) {
-			//call writer;
+			thread_func = writer;
+			waitingWriter++;
 		}
 		else { //getRand() > 0
-			//call reader;
+			thread_func = reader;
+			waitingReader++;
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
@@ -63,24 +66,58 @@ int getRand() {
 void reader(void *arg) {
 	thread_data_t *data = (thread_data_t *)arg;
 
+	fflush(stdout);
+	printf("***Thread %d is waiting on the mutex", data->tid);
+
 	semwait(&mutex);
 	readcount++;
+
+	fflush(stdout);
+	printf("***Thread %d is about to read. readcount is %d", data->tid, readcount);
+
 	if (readcount == 1) {
+		printf("***Thread %d wants to read. Waits for the wrt semaphore", data->tid);
+		fflush(stdout);
 		semwait(&wrt);
 	}
+	
+	fflush(stdout);
+	printf("***Thread %d release the mutex", data->tid);
 	semsignal(&mutex);
-	//in CS: Reading!
+
+	printf("***Thread %d IS READING!!!", data->tid);
+
+	fflush(stdout);
+	printf("***Thread %d is waiting on the mutex", data->tid);
 	semwait(&mutex);
+
 	readcount--;
+	fflush(stdout);
+	printf("***Thread %d is done reading. readcount is %d", data->tid, readcount);
+
 	if (readcount == 0) {
+		fflush(stdout);
+		printf("***Thread %d is done reading. Signals wrt", data->tid);
 		semsignal(&wrt);
 	}
+
+	fflush(stdout);
+	printf("***Thread %d is done reading and will now exit. There are %d remaining readers", data->tid, waitingReader);
 	signal(&mutex);
 }
 
-void writer() {
+void writer(void *arg) {
+	thread_data_t *data = (thread_data_t *)arg;
+
+	fflush(stdout);
+	printf("***Thread %d is waiting on wrt", data->tid);
 	semwait(&wrt);
-	//in CS: Writing!
+
+	fflush(stdout);
+	printf("***Thread %d IS WRITING!!!", data->tid);
+
+	fflush(stdout);
+	printf("***Thread %d is releasing wrt", data->tid);
 	signal(&wrt);
 }
 
