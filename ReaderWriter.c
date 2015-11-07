@@ -21,7 +21,7 @@ time_t t;
 int getRand();
 void *reader();
 void *writer();
-void semwait(semg_t *sem);
+void semwait(sem_t *sem);
 void semsignal(sem_t *sem);
 
 void main() {
@@ -39,17 +39,22 @@ void main() {
 		exit(EXIT_FAILURE);
 	}
 
-	for (int i = 0; i < NUM_THREADS; i++) {
+	int i;
+	for (i = 0; i < NUM_THREADS; i++) {
 		void * thread_func;
 		thread_data[i].tid = i;
 
 		if (getRand() < 0) {
 			thread_func = writer;
 			waitingWriter++;
+			fflush(stdout);
+			printf("***Thread %d is a writer and there are %d other writers", i, waitingWriter);
 		}
 		else { //getRand() > 0
 			thread_func = reader;
-			waitingReader++;
+			readcount++;
+			fflush(stdout);
+			printf("***Thread %d is a reader and there are %d other readers", i, readcount);
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
@@ -63,7 +68,7 @@ int getRand() {
 	return ((rand()% RAND_RANGE) - RAND_RANGE/2);
 }
 
-void reader(void *arg) {
+void *reader(void *arg) {
 	thread_data_t *data = (thread_data_t *)arg;
 
 	fflush(stdout);
@@ -102,11 +107,11 @@ void reader(void *arg) {
 	}
 
 	fflush(stdout);
-	printf("***Thread %d is done reading and will now exit. There are %d remaining readers", data->tid, waitingReader);
+	printf("***Thread %d is done reading and will now exit. There are %d other readers", data->tid, readcount);
 	signal(&mutex);
 }
 
-void writer(void *arg) {
+void *writer(void *arg) {
 	thread_data_t *data = (thread_data_t *)arg;
 
 	fflush(stdout);
