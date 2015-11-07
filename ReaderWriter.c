@@ -4,19 +4,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifndef NUM_THREADS
 #define NUM_THREADS 200
-#endif
+
 
 typedef struct _thread_data_t {
 	int tid;//thread id
-	int amount;//amount to deposit or withdraw
 } thread_data_t;
 
 const unsigned int RAND_RANGE = RAND_MAX>>10;
 
 sem_t wrt, mutex;
-readcount = 0;
+int readcount = 0;
 time_t t;
 
 int getRand();
@@ -28,7 +26,9 @@ void semsignal(sem_t *sem);
 int main(int argc, char const *argv[]) {
 	pthread_t threads[NUM_THREADS];
 	thread_data_t thread_data[NUM_THREADS];
+	int errorCheck;
 
+	//Seed the random number generator
 	srand((unsigned int) time(&t));
 
 	//initialize semaphores
@@ -36,6 +36,23 @@ int main(int argc, char const *argv[]) {
 		|| sem_init(&wrt, 0, (unsigned int)1) < 0) {
 		perror("sem_init");
 		exit(EXIT_FAILURE);
+	}
+
+	for (int i = 0; i < NUM_THREADS; i++) {
+		void * thread_func;
+		thread_data[i].tid = i;
+
+		if (getRand() < 0) {
+			//call writer;
+		}
+		else { //getRand() > 0
+			//call reader;
+		}
+
+		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
+			fprintf(stderr, "error: pthread_create, %d\n", errorCheck);
+			return EXIT_FAILURE;
+		}
 	}
 }
 
