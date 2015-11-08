@@ -15,6 +15,7 @@ const unsigned int RAND_RANGE = RAND_MAX>>10;
 
 sem_t wrt, mutex;
 int readcount = 0;
+int waitingReader = 0;
 int waitingWriter = 0;
 time_t t;
 
@@ -52,9 +53,9 @@ int main() {
 		}
 		else { //getRand() > 0
 			thread_func = reader;
-			readcount++;
+			waitingReader++;
 			//fflush(stdout);
-			printf("***Thread %d is a reader and there are %d readers \n", i, readcount);
+			printf("***Thread %d is a reader and there are %d readers \n", i, waitingReader);
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
@@ -85,7 +86,7 @@ void *reader(void *arg) {
 	readcount++;
 
 	fflush(stdout);
-	printf("***Thread %d is about to read. readcount is %d \n", data->tid, readcount);
+	printf("***Thread %d is about to read. There are %d waiting readers \n", data->tid, waitingReader);
 
 	if (readcount == 1) {
 		printf("***Thread %d wants to read. Waits for the wrt semaphore \n", data->tid);
@@ -105,8 +106,9 @@ void *reader(void *arg) {
 
 	readcount--;
 	fflush(stdout);
-	printf("***Thread %d is done reading. readcount is %d \n", data->tid, readcount);
+	printf("***Thread %d is done reading. There are %d waiting readers \n", data->tid, waitingReader);
 
+	waitingReader--;
 	if (readcount == 0) {
 		fflush(stdout);
 		printf("***Thread %d is done reading. Signals wrt \n", data->tid);
@@ -114,8 +116,8 @@ void *reader(void *arg) {
 	}
 
 	fflush(stdout);
-	printf("***Thread %d is done reading and will now exit. There are %d readers \n", data->tid, readcount);
 	semsignal(&mutex);
+	printf("***Thread %d (reader) is done reading and will now exit. There are %d waiting readers and %d waiting writers \n", data->tid, waitingReader, waitingWriter);
 }
 
 void *writer(void *arg) {
@@ -132,7 +134,7 @@ void *writer(void *arg) {
 	waitingWriter--;
 	printf("***Thread %d is releasing wrt \n", data->tid);
 	semsignal(&wrt);
-	printf("***Thread %d (writer) is now exiting, there are %d writers\n", data->tid, waitingWriter);
+	printf("***Thread %d (writer) is done writing and will now exit, there are %d waiting readers and %d waiting writers\n", data->tid, waitingReader, waitingWriter);
 }
 
 /*
