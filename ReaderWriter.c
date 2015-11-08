@@ -116,7 +116,6 @@ void *reader(void *arg) {
 	fflush(stdout);
 	printf("***Thread %d is done reading and will now exit. There are %d readers \n", data->tid, readcount);
 	semsignal(&mutex);
-	return 0;
 }
 
 void *writer(void *arg) {
@@ -130,9 +129,10 @@ void *writer(void *arg) {
 	printf("***Thread %d IS WRITING!!! \n", data->tid);
 
 	fflush(stdout);
+	waitingWriter--;
 	printf("***Thread %d is releasing wrt \n", data->tid);
 	semsignal(&wrt);
-	return 0;
+	printf("***Thread %d (writer) is now exiting, there are %d writers\n", data->tid, waitingWriter);
 }
 
 /*
