@@ -47,19 +47,25 @@ int main() {
 		if (getRand() < 0) {
 			thread_func = writer;
 			waitingWriter++;
-			fflush(stdout);
+			//fflush(stdout);
 			printf("***Thread %d is a writer and there are %d writers \n", i, waitingWriter);
 		}
 		else { //getRand() > 0
 			thread_func = reader;
 			readcount++;
-			fflush(stdout);
+			//fflush(stdout);
 			printf("***Thread %d is a reader and there are %d readers \n", i, readcount);
 		}
 
 		if ((errorCheck = pthread_create(&threads[i], NULL, thread_func, &thread_data[i]))) {
 			fprintf(stderr, "error: pthread_create, %d\n", errorCheck);
 			return EXIT_FAILURE;
+		}
+	}
+
+	for (i = 0; i < NUM_THREADS; i++) {
+		if ((errorCheck = pthread_join(threads[i], NULL))) {
+			fprintf(stderr, "error: pthread_join, %d\n", errorCheck);
 		}
 	}
 	return 0;
